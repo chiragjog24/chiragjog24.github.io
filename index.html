@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ship Feature Pipeline — WealthLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #08090C;
+    --surface: #0F1117;
+    --surface-2: #1A1D27;
+    --surface-3: #222633;
+    --border: #2D3040;
+    --border-subtle: #1E2130;
+    --text: #E8E8ED;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --purple: #7C6CFF;
+    --purple-dim: rgba(124,108,255,0.08);
+    --purple-border: rgba(124,108,255,0.25);
+    --blue: #3B82F6;
+    --blue-dim: rgba(59,130,246,0.06);
+    --blue-border: rgba(59,130,246,0.2);
+    --cyan: #22D3EE;
+    --cyan-dim: rgba(34,211,238,0.06);
+    --cyan-border: rgba(34,211,238,0.2);
+    --violet: #A78BFA;
+    --violet-dim: rgba(167,139,250,0.06);
+    --violet-border: rgba(167,139,250,0.2);
+    --green: #4ADE80;
+    --green-dim: rgba(74,222,128,0.06);
+    --green-border: rgba(74,222,128,0.2);
+    --orange: #FB923C;
+    --orange-dim: rgba(251,146,60,0.06);
+    --orange-border: rgba(251,146,60,0.2);
+    --pink: #F472B6;
+    --pink-dim: rgba(244,114,182,0.06);
+    --pink-border: rgba(244,114,182,0.2);
+    --amber: #FBBF24;
+    --amber-dim: rgba(251,191,36,0.08);
+    --amber-border: rgba(251,191,36,0.3);
+    --red: #F87171;
+    --red-dim: rgba(248,113,113,0.04);
+    --red-border: rgba(248,113,113,0.15);
+    --emerald: #10B981;
+    --emerald-dim: rgba(16,185,129,0.08);
+    --emerald-border: rgba(16,185,129,0.25);
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    font-family: "Inter", system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    padding: 56px 80px;
+    width: 1440px;
+    border-radius: 24px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Header */
+  .header { padding-bottom: 48px; }
+  .header-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--purple); margin-bottom: 10px;
+  }
+  .header-title {
+    font-size: 48px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.035em; line-height: 1.05; margin-bottom: 12px;
+  }
+  .header-subtitle {
+    font-size: 15px; color: var(--text-muted); line-height: 1.6;
+    max-width: 680px;
+  }
+  .header-subtitle strong { color: var(--text-secondary); font-weight: 500; }
+
+  /* Agent Roster */
+  .roster {
+    display: grid; grid-template-columns: repeat(9, 1fr);
+    gap: 8px; padding-bottom: 40px;
+  }
+  .roster-card {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: 14px 8px; border-radius: 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .roster-card:hover { border-color: var(--purple-border); }
+  .roster-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .roster-name { font-size: 10px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.3; }
+  .roster-role { font-size: 9px; color: var(--text-muted); text-align: center; }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 0; margin: 8px 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #3D4050; white-space: nowrap;
+  }
+
+  /* Stage */
+  .stage { padding: 24px 0; }
+  .stage-header {
+    display: flex; align-items: center; gap: 16px; padding-bottom: 20px;
+  }
+  .stage-number {
+    width: 36px; height: 36px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800; flex-shrink: 0;
+    color: white;
+  }
+  .stage-title { font-size: 20px; font-weight: 700; color: var(--text); }
+  .stage-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .stage-badge {
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Cards */
+  .flow-row {
+    display: flex; gap: 16px; padding-left: 52px; align-items: stretch;
+  }
+  .flow-arrow {
+    display: flex; align-items: center; color: var(--border);
+    font-size: 20px; padding: 0 2px; flex-shrink: 0;
+  }
+  .card {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 18px 22px; border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    min-width: 180px;
+  }
+  .card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .card-body { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Routing pills */
+  .routing-row {
+    display: flex; gap: 10px; padding: 20px 0 8px 52px; flex-wrap: wrap;
+  }
+  .route-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; border-radius: 999px;
+    background: rgba(124,108,255,0.04); border: 1px solid var(--border);
+  }
+  .route-dot {
+    width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0;
+  }
+  .route-text { font-size: 12px; color: var(--text); }
+
+  /* Parallel container */
+  .parallel-container {
+    display: flex; gap: 24px; padding-left: 52px;
+  }
+  .parallel-track { flex: 1; }
+  .track-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; padding-bottom: 10px;
+  }
+  .track-cards { display: flex; gap: 10px; }
+  .track-card {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 14px 18px; border-radius: 12px;
+    border: 1px solid; flex: 1;
+  }
+  .track-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .track-card-body { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .track-card-tag { font-size: 9px; font-weight: 600; }
+
+  /* Merge bar */
+  .merge-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; margin: 16px 0 0 52px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; width: fit-content;
+  }
+  .merge-bar-icon { font-size: 14px; color: var(--text-muted); }
+  .merge-bar-text { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* Verification grid */
+  .verify-grid {
+    display: flex; gap: 24px; padding-left: 52px;
+  }
+  .verify-col { display: flex; flex-direction: column; gap: 14px; }
+  .verify-col--tests { flex: 1; }
+  .verify-col--review { width: 340px; }
+
+  .verify-card {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 18px 22px; border-radius: 14px;
+    border: 1px solid;
+  }
+  .verify-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .verify-card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .verify-card-badge {
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 9px; font-weight: 600;
+  }
+  .verify-card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .verify-card-body { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Tier pills */
+  .tier-row { display: flex; gap: 8px; }
+  .tier-pill {
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 10px; font-weight: 500; border: 1px solid;
+  }
+
+  /* Classification rows */
+  .classify-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border-radius: 8px;
+  }
+  .classify-dot { width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0; }
+  .classify-label { font-size: 11px; color: var(--text); flex: 1; }
+  .classify-target { font-size: 11px; font-weight: 600; }
+
+  /* Callout */
+  .callout {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    border: 1px solid;
+  }
+  .callout-icon { font-size: 13px; flex-shrink: 0; padding-top: 1px; }
+  .callout-text { font-size: 10px; line-height: 1.6; }
+
+  /* Results bar */
+  .results-bar {
+    display: flex; gap: 16px; padding: 16px 0 0 52px;
+  }
+  .results-card {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 14px 18px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 12px;
+  }
+  .results-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .results-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .results-body { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+  /* Footer */
+  .footer { padding-top: 32px; }
+  .legend {
+    display: flex; gap: 28px; flex-wrap: wrap; padding: 16px 0;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-swatch {
+    width: 12px; height: 12px; border-radius: 3px; border: 1px solid;
+  }
+  .legend-text { font-size: 11px; color: var(--text-muted); }
+
+  .guarantees {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 20px 24px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 14px;
+    margin-top: 16px;
+  }
+  .guarantees-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .guarantees-grid { display: flex; gap: 32px; flex-wrap: wrap; }
+  .guarantee { display: flex; flex-direction: column; gap: 3px; }
+  .guarantee-label { font-size: 12px; color: var(--text); font-weight: 500; }
+  .guarantee-value { font-size: 11px; color: var(--text-muted); }
+
+  /* State Object */
+  .state-section {
+    padding: 24px 0 8px 0;
+  }
+  .state-title {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    padding-bottom: 12px;
+  }
+  .state-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; padding-left: 52px;
+  }
+  .state-card {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 14px 18px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .state-card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .state-field {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2px 0;
+  }
+  .state-key {
+    font-size: 11px; font-family: var(--mono); color: var(--text-secondary);
+  }
+  .state-type {
+    font-size: 10px; font-family: var(--mono); color: var(--text-muted);
+  }
+
+  /* Worktree diagram */
+  .worktree-section { padding: 8px 0 24px 0; }
+  .worktree-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; padding-left: 52px;
+  }
+  .wt-card {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 16px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface-2);
+  }
+  .wt-card-actor { font-size: 12px; font-weight: 600; color: var(--text); }
+  .wt-card-isolated {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 999px; width: fit-content;
+  }
+  .wt-card-reason { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+
+  /* Examples */
+  .examples { padding-top: 24px; }
+  .example-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; padding-top: 12px;
+  }
+  .example-card {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 20px 22px; border-radius: 14px;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .example-header { display: flex; align-items: center; gap: 10px; }
+  .example-badge {
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 600;
+  }
+  .example-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .example-input {
+    font-size: 12px; font-family: var(--mono); color: var(--purple);
+    padding: 8px 12px; background: rgba(124,108,255,0.06);
+    border-radius: 8px; border: 1px solid var(--purple-border);
+  }
+  .example-flow {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .example-step {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 11px; color: var(--text-muted); line-height: 1.4;
+  }
+  .example-step-num {
+    font-size: 10px; font-weight: 700; color: var(--text-secondary);
+    background: var(--surface-3); padding: 1px 6px; border-radius: 4px;
+    flex-shrink: 0; margin-top: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- =========== HEADER =========== -->
+  <div class="header">
+    <div class="header-eyebrow">Multi-Agent Pipeline Orchestrator</div>
+    <div class="header-title">/ship-feature</div>
+    <div class="header-subtitle">
+      Takes a requirement or Linear ticket and drives it through the <strong>full development lifecycle</strong>:
+      PO triage, conditional product review, UX design, architecture planning,
+      parallel development in git worktrees, 3-tier testing with classified fix loops,
+      code review, UAT on Railway preview, and squash merge to main.
+    </div>
+  </div>
+
+  <!-- =========== AGENT ROSTER =========== -->
+  <div style="padding-bottom: 8px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); padding-bottom: 12px;">Agent Roster</div>
+    <div class="roster">
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--purple-dim); color: var(--purple);">PO</div>
+        <div class="roster-name">Product Owner</div>
+        <div class="roster-role">Triage + Route</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--blue-dim); color: var(--blue);">PM</div>
+        <div class="roster-name">Product Manager</div>
+        <div class="roster-role">Tickets + Scope</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--cyan-dim); color: var(--cyan);">UX</div>
+        <div class="roster-name">UX Designer</div>
+        <div class="roster-role">Wireframes</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--violet-dim); color: var(--violet);">AR</div>
+        <div class="roster-name">Architect</div>
+        <div class="roster-role">Sub-tickets</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--green-dim); color: var(--green);">FS</div>
+        <div class="roster-name">Fullstack Dev</div>
+        <div class="roster-role">FE + BE code</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--green-dim); color: var(--green);">PD</div>
+        <div class="roster-name">Parser Dev</div>
+        <div class="roster-role">Python parsers</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--pink-dim); color: var(--pink);">QE</div>
+        <div class="roster-name">QE Engineer</div>
+        <div class="roster-role">3-tier tests</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--violet-dim); color: var(--violet);">CR</div>
+        <div class="roster-name">Code Reviewer</div>
+        <div class="roster-role">9-point review</div>
+      </div>
+      <div class="roster-card">
+        <div class="roster-avatar" style="background: var(--orange-dim); color: var(--orange);">DE</div>
+        <div class="roster-name">Deploy Eng.</div>
+        <div class="roster-role">Railway preview</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Pipeline Stages</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- =========== STAGE 0: PO TRIAGE =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--purple);">0</div>
+      <div>
+        <div class="stage-title">PO Triage</div>
+        <div class="stage-desc">Always runs first — assesses, enriches, and decides routing</div>
+      </div>
+      <div class="stage-badge" style="background: var(--purple-dim); color: var(--purple);">Always</div>
+    </div>
+    <div class="flow-row">
+      <div class="card" style="background: var(--surface-2); width: 200px;">
+        <div class="card-label" style="color: var(--purple);">Input</div>
+        <div class="card-title">Entry Point</div>
+        <div class="card-body">
+          <span style="font-family: var(--mono); font-size: 11px; color: var(--purple);">/ship-feature</span><br>
+          Requirement text<br>
+          <em>or</em> WEA-XX ticket ID
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--purple-dim); border-color: var(--purple-border); width: 240px;">
+        <div class="card-label" style="color: var(--purple);">Agent</div>
+        <div class="card-title">Product Owner</div>
+        <div class="card-body">
+          Fetch ticket or parse requirement<br>
+          Assess type + complexity<br>
+          Enrich if incomplete<br>
+          Decide PM / UX / Arch routing
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--amber-dim); border-color: var(--amber-border); width: 240px;">
+        <div class="card-label" style="color: var(--amber);">User Gate</div>
+        <div class="card-title">Approve Routing</div>
+        <div class="card-body">
+          <strong style="color: var(--green);">Approve</strong> &mdash; proceed as routed<br>
+          <strong style="color: var(--amber);">Override</strong> &mdash; change routing<br>
+          <strong style="color: var(--red);">Cancel</strong> &mdash; abort pipeline
+        </div>
+      </div>
+    </div>
+
+    <!-- Routing Decision -->
+    <div class="routing-row">
+      <div class="route-pill">
+        <div class="route-dot" style="background: var(--blue);"></div>
+        <div class="route-text">PM required &rarr; Stage 1</div>
+      </div>
+      <div class="route-pill">
+        <div class="route-dot" style="background: var(--cyan);"></div>
+        <div class="route-text">UX required &rarr; Stage 2a</div>
+      </div>
+      <div class="route-pill">
+        <div class="route-dot" style="background: var(--violet);"></div>
+        <div class="route-text">Arch required &rarr; Stage 2b</div>
+      </div>
+      <div class="route-pill">
+        <div class="route-dot" style="background: var(--green);"></div>
+        <div class="route-text">Dev only &rarr; Stage 3 (fast lane)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Conditional Stages</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- =========== STAGE 1: PRODUCT REVIEW =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--blue);">1</div>
+      <div>
+        <div class="stage-title">Product Review</div>
+        <div class="stage-desc">Create Linear epic + child tickets with acceptance criteria</div>
+      </div>
+      <div class="stage-badge" style="background: var(--blue-dim); color: var(--blue);">Conditional</div>
+    </div>
+    <div class="flow-row">
+      <div class="card" style="background: var(--blue-dim); border-color: var(--blue-border); width: 260px;">
+        <div class="card-label" style="color: var(--blue);">Agent</div>
+        <div class="card-title">Product Manager</div>
+        <div class="card-body">
+          Analyze requirement in context<br>
+          Scan affected codebase areas<br>
+          Size work (S/M/L/XL)<br>
+          Create parent epic + 2-5 child tickets<br>
+          Each ticket: summary, AC, scope, tech hints
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--amber-dim); border-color: var(--amber-border); width: 220px;">
+        <div class="card-label" style="color: var(--amber);">Gate 1</div>
+        <div class="card-title">Approve Tickets</div>
+        <div class="card-body">
+          <strong style="color: var(--green);">Approve</strong> &mdash; proceed<br>
+          <strong style="color: var(--amber);">Revise</strong> &mdash; re-spawn PM with feedback<br>
+          <strong style="color: var(--red);">Cancel</strong> &mdash; stop
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== STAGE 2: DESIGN + ARCHITECTURE =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--cyan); color: var(--bg);">2</div>
+      <div>
+        <div class="stage-title">Design + Architecture</div>
+        <div class="stage-desc">Parallel agents &mdash; only PO-required stages spawn</div>
+      </div>
+      <div class="stage-badge" style="background: var(--cyan-dim); color: var(--cyan);">Parallel</div>
+      <div class="stage-badge" style="background: var(--blue-dim); color: var(--blue);">Conditional</div>
+    </div>
+    <div class="flow-row">
+      <div class="card" style="background: var(--cyan-dim); border-color: var(--cyan-border); width: 240px;">
+        <div class="card-label" style="color: var(--cyan);">Agent 2a</div>
+        <div class="card-title">UX Designer</div>
+        <div class="card-body">
+          Wireframe descriptions + ASCII layouts<br>
+          Component hierarchy (shadcn/ui)<br>
+          Data flow (tRPC &rarr; components)<br>
+          Responsive + interaction patterns<br>
+          Implementation notes for devs
+        </div>
+      </div>
+      <div class="card" style="background: var(--violet-dim); border-color: var(--violet-border); width: 240px;">
+        <div class="card-label" style="color: var(--violet);">Agent 2b</div>
+        <div class="card-title">Architect</div>
+        <div class="card-body">
+          Break into sub-tickets (implementable units)<br>
+          Label each: Frontend / Backend / Parser<br>
+          Estimate: S (&lt;1h), M (1-3h), L (3-8h)<br>
+          Create in Linear under parent<br>
+          Define dependency order
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--amber-dim); border-color: var(--amber-border); width: 220px;">
+        <div class="card-label" style="color: var(--amber);">Gate 2</div>
+        <div class="card-title">Approve Design + Plan</div>
+        <div class="card-body">
+          <strong style="color: var(--green);">Approve</strong> &mdash; start dev<br>
+          <strong style="color: var(--cyan);">Revise Design</strong> &mdash; re-spawn UX<br>
+          <strong style="color: var(--violet);">Revise Plan</strong> &mdash; re-spawn Arch<br>
+          <strong style="color: var(--red);">Cancel</strong> &mdash; stop
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Always Runs</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- =========== STAGE 3: DEVELOPMENT =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--green); color: var(--bg);">3</div>
+      <div>
+        <div class="stage-title">Development</div>
+        <div class="stage-desc">Parallel worktrees &mdash; dev agents + QE write tests simultaneously</div>
+      </div>
+      <div class="stage-badge" style="background: var(--green-dim); color: var(--green);">Parallel</div>
+      <div class="stage-badge" style="background: var(--green-dim); color: var(--green);">Worktrees</div>
+    </div>
+
+    <!-- 3a: Create Feature Branch -->
+    <div style="padding-left: 52px; padding-bottom: 16px;">
+      <div class="card" style="background: var(--surface-2); width: fit-content;">
+        <div class="card-label" style="color: var(--text-muted);">3a &middot; Setup</div>
+        <div class="card-title">Create Pipeline Worktree + Feature Branch</div>
+        <div class="card-body">
+          <span style="font-family: var(--mono); font-size: 11px; color: var(--green);">git worktree add ../{repo}-{ticket_id} -b {ticket_id}/feature-name</span><br>
+          Isolates all pipeline work from user's main directory
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b + 3c: Parallel Dev + QE -->
+    <div class="parallel-container">
+      <div class="parallel-track">
+        <div class="track-label" style="color: var(--green);">3b &middot; Dev Track</div>
+        <div class="track-cards">
+          <div class="track-card" style="background: var(--green-dim); border-color: var(--green-border);">
+            <div class="track-card-title">Fullstack Dev</div>
+            <div class="track-card-body">Frontend + Backend tickets<br>Schema &rarr; migration &rarr; router &rarr; UI</div>
+            <div class="track-card-tag" style="color: var(--green);">Isolated worktree per ticket</div>
+          </div>
+          <div class="track-card" style="background: var(--green-dim); border-color: var(--green-border);">
+            <div class="track-card-title">Parser Dev</div>
+            <div class="track-card-body">Parser-labeled tickets<br>BasePlatformParser pattern</div>
+            <div class="track-card-tag" style="color: var(--green);">Isolated worktree per ticket</div>
+          </div>
+        </div>
+      </div>
+      <div class="parallel-track" style="max-width: 260px;">
+        <div class="track-label" style="color: var(--pink);">3c &middot; QE Track</div>
+        <div style="display: flex; flex-direction: column; gap: 5px; padding: 14px 18px; border-radius: 12px; background: var(--pink-dim); border: 1px solid var(--pink-border);">
+          <div class="track-card-title">QE Engineer</div>
+          <div class="track-card-body">
+            Write tests for the feature (not run yet)<br>
+            Playwright E2E + vitest integration + component
+          </div>
+          <div class="track-card-tag" style="color: var(--pink);">Isolated worktree</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3d: Merge -->
+    <div class="merge-bar">
+      <div class="merge-bar-icon">&#x2934;</div>
+      <div class="merge-bar-text">3d &middot; Merge all worktree branches &rarr; feature branch (dependency order)</div>
+    </div>
+  </div>
+
+  <!-- =========== STAGE 4: PR + DEPLOY + VERIFY =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--orange); color: var(--bg);">4</div>
+      <div>
+        <div class="stage-title">PR + Deploy + Verify</div>
+        <div class="stage-desc">Two independent fix loops &mdash; review (max 3 rounds) + tests (max 3 iterations)</div>
+      </div>
+    </div>
+
+    <!-- 4a + 4b: PR + Deploy -->
+    <div class="flow-row" style="padding-bottom: 20px;">
+      <div class="card" style="width: 200px;">
+        <div class="card-label" style="color: var(--text-muted);">4a</div>
+        <div class="card-title">Create PR</div>
+        <div class="card-body">
+          <span style="font-family: var(--mono); font-size: 10px; color: var(--text-secondary);">gh pr create</span><br>
+          Title: {ticket}: {title}<br>
+          Body: Closes {ticket}
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--orange-dim); border-color: var(--orange-border); width: 220px;">
+        <div class="card-label" style="color: var(--orange);">4b &middot; Agent</div>
+        <div class="card-title">Deploy Preview</div>
+        <div class="card-body">
+          Railway auto-deploys on PR<br>
+          Deploy agent polls health<br>
+          Returns web + parser URLs
+        </div>
+      </div>
+    </div>
+
+    <!-- Parallel Verification Label -->
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 0 16px 52px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange);">Parallel Verification</div>
+      <div style="flex: 1; height: 1px; background: var(--orange-border);"></div>
+    </div>
+
+    <!-- Parallel: Tests (left) + Review (right) -->
+    <div class="verify-grid">
+      <!-- LEFT COLUMN: Tests -->
+      <div class="verify-col verify-col--tests">
+        <!-- 4c: Run Tests -->
+        <div class="verify-card" style="background: var(--pink-dim); border-color: var(--pink-border);">
+          <div class="verify-card-header">
+            <div class="verify-card-label" style="color: var(--pink);">4c &middot; QE Agent</div>
+            <div class="verify-card-badge" style="background: var(--pink-dim); color: var(--pink); border: 1px solid var(--pink-border);">3 Tiers</div>
+          </div>
+          <div class="verify-card-title">Run Tests Against Preview</div>
+          <div class="tier-row">
+            <div class="tier-pill" style="background: var(--violet-dim); border-color: var(--violet-border); color: var(--violet);">T1: Backend (vitest)</div>
+            <div class="tier-pill" style="background: var(--cyan-dim); border-color: var(--cyan-border); color: var(--cyan);">T2: Component (RTL)</div>
+            <div class="tier-pill" style="background: var(--green-dim); border-color: var(--green-border); color: var(--green);">T3: E2E (Playwright)</div>
+          </div>
+          <div class="verify-card-body">
+            All tiers run even if earlier ones fail &mdash; collect ALL failures for batch fixing.<br>
+            Coverage delta tracked (before/after).
+          </div>
+        </div>
+
+        <!-- 4h: Test Fix Loop -->
+        <div class="verify-card" style="background: var(--red-dim); border-color: var(--red-border);">
+          <div class="verify-card-header">
+            <div class="verify-card-label" style="color: var(--red);">4h &middot; Fix Loop</div>
+            <div class="verify-card-badge" style="background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border);">Max 3 Iterations</div>
+          </div>
+          <div class="verify-card-title">Test Fix Loop</div>
+          <div class="verify-card-body" style="padding-bottom: 6px;">Classify each failure &rarr; dispatch the right agent in parallel worktrees</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="classify-row" style="background: var(--green-dim);">
+              <div class="classify-dot" style="background: var(--green);"></div>
+              <div class="classify-label">Implementation bug</div>
+              <div class="classify-target" style="color: var(--green);">&rarr; Dev agent</div>
+            </div>
+            <div class="classify-row" style="background: var(--pink-dim);">
+              <div class="classify-dot" style="background: var(--pink);"></div>
+              <div class="classify-label">Test bug (stale selector, wrong assertion)</div>
+              <div class="classify-target" style="color: var(--pink);">&rarr; QE agent</div>
+            </div>
+            <div class="classify-row" style="background: var(--orange-dim);">
+              <div class="classify-dot" style="background: var(--orange);"></div>
+              <div class="classify-label">Environment issue (DNS, 502, seed)</div>
+              <div class="classify-target" style="color: var(--orange);">&rarr; Deploy agent</div>
+            </div>
+          </div>
+          <div class="verify-card-body" style="padding-top: 8px;">
+            Fix agents in parallel &rarr; merge &rarr; push &rarr; redeploy &rarr; re-run tests + single-pass review<br>
+            <strong style="color: var(--red);">Regression detection:</strong> flags if failures aren't decreasing after 2 consecutive iterations
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Code Review -->
+      <div class="verify-col verify-col--review">
+        <!-- 4d: Code Review -->
+        <div class="verify-card" style="background: var(--violet-dim); border-color: var(--violet-border);">
+          <div class="verify-card-label" style="color: var(--violet);">4d &middot; Agent</div>
+          <div class="verify-card-title">Code Review</div>
+          <div class="verify-card-body">
+            Full 9-point checklist (round 0)<br>
+            Severity: BLOCKER / WARNING / SUGGESTION<br>
+            Each finding posted as inline PR comment<br>
+            Summary comment with verdict table
+          </div>
+        </div>
+
+        <!-- 4e: Post Inline Comments -->
+        <div class="verify-card" style="background: var(--surface-2); border-color: var(--border);">
+          <div class="verify-card-label" style="color: var(--text-muted);">4e</div>
+          <div class="verify-card-title">Post Inline PR Comments</div>
+          <div class="verify-card-body">
+            Each finding &rarr; inline comment on file:line<br>
+            Summary table: blocker / warning / suggestion counts<br>
+            Verdict: PASS or NEEDS_FIXES
+          </div>
+        </div>
+
+        <!-- 4f: Review Fix Loop -->
+        <div class="verify-card" style="background: var(--red-dim); border-color: var(--red-border);">
+          <div class="verify-card-header">
+            <div class="verify-card-label" style="color: var(--red);">4f &middot; Fix Loop</div>
+            <div class="verify-card-badge" style="background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border);">Max 3 Rounds</div>
+          </div>
+          <div class="verify-card-title">Review Fix Loop</div>
+          <div class="verify-card-body">
+            <strong>Round 0:</strong> Full 9-point review<br>
+            <strong>Round 1-2:</strong> Scoped re-review (only flagged items)<br>
+            Dev agent fixes blockers + warnings in worktree<br>
+            Reviewer verifies: Resolved / Not resolved / Regressed
+          </div>
+        </div>
+
+        <!-- No nesting callout -->
+        <div class="callout" style="background: var(--amber-dim); border-color: var(--amber-border);">
+          <div class="callout-icon" style="color: var(--amber);">!</div>
+          <div class="callout-text" style="color: var(--amber);">
+            <strong>Independent budgets</strong> &mdash; test fixes (4h) and review fixes (4f) never nest.
+            After test fixes, only a single-pass review runs (no full 4f loop).
+            Prevents 3&times;3 = 9 cycle explosion.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4g: Post Results -->
+    <div class="results-bar">
+      <div class="results-card" style="flex: 1;">
+        <div class="results-label">4g &middot; Post Results to PR</div>
+        <div class="results-title">Pipeline Results Comment</div>
+        <div class="results-body">
+          Preview URLs (web + parser) &middot; CI status (typecheck, lint, tests, build) &middot;
+          QE results by tier (backend/component/E2E) &middot; Coverage delta &middot;
+          Code review verdict + rounds &middot; Fix iteration history &middot; Follow-up ticket ID
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== STAGE 5: UAT + MERGE =========== -->
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-number" style="background: var(--emerald);">5</div>
+      <div>
+        <div class="stage-title">UAT + Merge</div>
+        <div class="stage-desc">User tests on Railway preview, then squash merge to main</div>
+      </div>
+      <div class="stage-badge" style="background: var(--emerald-dim); color: var(--emerald);">Final</div>
+    </div>
+    <div class="flow-row">
+      <div class="card" style="background: var(--amber-dim); border-color: var(--amber-border); width: 260px;">
+        <div class="card-label" style="color: var(--amber);">5a &middot; User Gate</div>
+        <div class="card-title">UAT on Preview URL</div>
+        <div class="card-body">
+          User manually tests on preview<br>
+          <strong style="color: var(--green);">Passed</strong> &mdash; proceed to merge<br>
+          <strong style="color: var(--amber);">Issues</strong> &mdash; dev fixes + redeploy<br>
+          <strong style="color: var(--red);">Cancel</strong> &mdash; leave PR open
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="width: 200px;">
+        <div class="card-label" style="color: var(--text-muted);">5b</div>
+        <div class="card-title">Wait for CI</div>
+        <div class="card-body">
+          <span style="font-family: var(--mono); font-size: 10px; color: var(--text-secondary);">gh pr checks --watch</span><br>
+          Max 2 CI fix attempts<br>
+          Then escalate to user
+        </div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="card" style="background: var(--emerald-dim); border-color: var(--emerald-border); width: 240px;">
+        <div class="card-label" style="color: var(--emerald);">5c</div>
+        <div class="card-title">Squash Merge</div>
+        <div class="card-body">
+          <span style="font-family: var(--mono); font-size: 10px; color: var(--emerald);">gh pr merge --squash --delete-branch</span><br>
+          Railway tears down preview<br>
+          Remove pipeline worktree<br>
+          Linear tickets &rarr; Done<br>
+          <span style="font-family: var(--mono); font-size: 10px; color: var(--text-secondary);">git pull</span> on main
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== WORKTREE ISOLATION =========== -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Isolation Strategy</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="worktree-section">
+    <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 16px;">
+      <div style="font-size: 16px; font-weight: 700; color: var(--text);">Git Worktree Isolation</div>
+      <div style="font-size: 12px; color: var(--text-muted);">All code-changing work runs in isolated worktrees to prevent wrong-branch commits</div>
+    </div>
+    <div class="worktree-grid">
+      <div class="wt-card">
+        <div class="wt-card-actor">Orchestrator</div>
+        <div class="wt-card-isolated" style="background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border);">Pipeline worktree</div>
+        <div class="wt-card-reason">Keeps user's main directory clean on main</div>
+      </div>
+      <div class="wt-card">
+        <div class="wt-card-actor">Dev Agents</div>
+        <div class="wt-card-isolated" style="background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border);">Nested worktree each</div>
+        <div class="wt-card-reason">Parallel dev without merge conflicts</div>
+      </div>
+      <div class="wt-card">
+        <div class="wt-card-actor">QE Agent</div>
+        <div class="wt-card-isolated" style="background: var(--pink-dim); color: var(--pink); border: 1px solid var(--pink-border);">Nested worktree</div>
+        <div class="wt-card-reason">Tests don't conflict with dev code</div>
+      </div>
+      <div class="wt-card">
+        <div class="wt-card-actor">Fix Agents</div>
+        <div class="wt-card-isolated" style="background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border);">Worktree each</div>
+        <div class="wt-card-reason">Fixes isolated from each other</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; padding: 12px 0 0 52px;">
+      <div class="wt-card" style="flex-direction: row; gap: 12px; align-items: center; opacity: 0.5;">
+        <div class="wt-card-actor" style="white-space: nowrap;">PO / PM / UX / Arch / Deploy</div>
+        <div class="wt-card-isolated" style="background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border);">No worktree</div>
+        <div class="wt-card-reason" style="white-space: nowrap;">Read-only analysis or external checks only</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== STATE OBJECT =========== -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Pipeline State</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="state-section">
+    <div style="font-size: 14px; font-weight: 700; color: var(--text); padding-bottom: 4px;">State Object</div>
+    <div style="font-size: 12px; color: var(--text-muted); padding-bottom: 16px;">Threaded through every agent spawn &mdash; each stage writes its outputs back</div>
+    <div class="state-grid">
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--purple);">Stage 0 &mdash; Triage</div>
+        <div class="state-field"><div class="state-key">ticket_id</div><div class="state-type">string | null</div></div>
+        <div class="state-field"><div class="state-key">ticket_type</div><div class="state-type">bug | feature | refactor | chore</div></div>
+        <div class="state-field"><div class="state-key">complexity</div><div class="state-type">small | medium | large</div></div>
+        <div class="state-field"><div class="state-key">routing.pm</div><div class="state-type">required | skip</div></div>
+        <div class="state-field"><div class="state-key">routing.ux</div><div class="state-type">required | skip</div></div>
+        <div class="state-field"><div class="state-key">routing.architect</div><div class="state-type">required | skip</div></div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--blue);">Stages 1-2 &mdash; Plan</div>
+        <div class="state-field"><div class="state-key">parent_ticket_id</div><div class="state-type">string</div></div>
+        <div class="state-field"><div class="state-key">ticket_ids</div><div class="state-type">string[]</div></div>
+        <div class="state-field"><div class="state-key">sub_ticket_labels</div><div class="state-type">{id: FE|BE|Parser}</div></div>
+        <div class="state-field"><div class="state-key">wireframes</div><div class="state-type">string</div></div>
+        <div class="state-field"><div class="state-key">delivery_plan</div><div class="state-type">string</div></div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--green);">Stage 3 &mdash; Dev</div>
+        <div class="state-field"><div class="state-key">feature_branch</div><div class="state-type">string</div></div>
+        <div class="state-field"><div class="state-key">worktree_branches</div><div class="state-type">string[]</div></div>
+        <div class="state-field"><div class="state-key">dev_agent_results</div><div class="state-type">{id: {status, files[]}}</div></div>
+        <div class="state-field"><div class="state-key">qe_test_files</div><div class="state-type">string[]</div></div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--orange);">Stage 4 &mdash; Verify</div>
+        <div class="state-field"><div class="state-key">pr_number</div><div class="state-type">number</div></div>
+        <div class="state-field"><div class="state-key">preview.web_url</div><div class="state-type">string</div></div>
+        <div class="state-field"><div class="state-key">test_results.all_passed</div><div class="state-type">boolean</div></div>
+        <div class="state-field"><div class="state-key">test_fix_state.iteration</div><div class="state-type">0-3</div></div>
+        <div class="state-field"><div class="state-key">review_state.round</div><div class="state-type">0-2</div></div>
+        <div class="state-field"><div class="state-key">review_state.verdict</div><div class="state-type">PASS | NEEDS_FIXES</div></div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--pink);">Tests &mdash; Detail</div>
+        <div class="state-field"><div class="state-key">tier_results.backend</div><div class="state-type">{passed, total, failures}</div></div>
+        <div class="state-field"><div class="state-key">tier_results.component</div><div class="state-type">{passed, total, failures}</div></div>
+        <div class="state-field"><div class="state-key">tier_results.e2e</div><div class="state-type">{passed, total, videos[]}</div></div>
+        <div class="state-field"><div class="state-key">coverage_delta</div><div class="state-type">number (%)</div></div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-label" style="color: var(--emerald);">Stage 5 &mdash; Ship</div>
+        <div class="state-field"><div class="state-key">uat_passed</div><div class="state-type">boolean</div></div>
+        <div class="state-field"><div class="state-key">merged</div><div class="state-type">boolean</div></div>
+        <div class="state-field"><div class="state-key">pipeline_worktree.path</div><div class="state-type">string</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== EXAMPLES =========== -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Usage Examples</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="examples">
+    <div class="example-grid">
+      <!-- Example 1: Fast Lane -->
+      <div class="example-card">
+        <div class="example-header">
+          <div class="example-badge" style="background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border);">Fast Lane</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Bug fix</div>
+        </div>
+        <div class="example-title">Upload page crash</div>
+        <div class="example-input">/ship-feature WEA-99</div>
+        <div class="example-flow">
+          <div class="example-step">
+            <div class="example-step-num">S0</div>
+            <div>PO: Bug, Small &mdash; routing: all skip</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S3</div>
+            <div>1 dev on feature branch + QE writes regression test</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S4</div>
+            <div>PR &rarr; preview &rarr; 48/48 tests pass &rarr; review PASS</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S5</div>
+            <div>UAT passed &rarr; squash merge &rarr; done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example 2: Medium -->
+      <div class="example-card">
+        <div class="example-header">
+          <div class="example-badge" style="background: var(--violet-dim); color: var(--violet); border: 1px solid var(--violet-border);">Arch Only</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Backend feature</div>
+        </div>
+        <div class="example-title">XIRR on performance page</div>
+        <div class="example-input">/ship-feature WEA-75</div>
+        <div class="example-flow">
+          <div class="example-step">
+            <div class="example-step-num">S0</div>
+            <div>PO: Feature, Medium &mdash; PM skip, UX skip, Arch required</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S2b</div>
+            <div>Architect: 3 sub-tickets (engine, router, page)</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S3</div>
+            <div>3 dev agents in parallel worktrees + QE</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S4-5</div>
+            <div>PR &rarr; preview &rarr; verify &rarr; UAT &rarr; merge</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example 3: Full Pipeline -->
+      <div class="example-card">
+        <div class="example-header">
+          <div class="example-badge" style="background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border);">Full Pipeline</div>
+          <div style="font-size: 11px; color: var(--text-muted);">New feature</div>
+        </div>
+        <div class="example-title">Dark mode toggle</div>
+        <div class="example-input">/ship-feature "Add dark mode..."</div>
+        <div class="example-flow">
+          <div class="example-step">
+            <div class="example-step-num">S0</div>
+            <div>PO: Feature, Large &mdash; PM, UX, Arch all required</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S1</div>
+            <div>PM creates epic + 2 child tickets</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S2</div>
+            <div>UX wireframes + Arch creates 4 sub-tickets</div>
+          </div>
+          <div class="example-step">
+            <div class="example-step-num">S3-5</div>
+            <div>4 dev agents &parallel; + QE &rarr; PR &rarr; verify &rarr; UAT &rarr; merge</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== ERROR HANDLING =========== -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Error Handling</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 8px 0;">
+    <div class="results-card">
+      <div class="results-label" style="color: var(--red);">Agent Failure</div>
+      <div class="results-title">Retry / Skip / Cancel</div>
+      <div class="results-body">
+        Critical (PM, Arch, Dev, QE, Reviewer): retry or cancel<br>
+        Non-critical (UX): can skip, proceed text-only
+      </div>
+    </div>
+    <div class="results-card">
+      <div class="results-label" style="color: var(--amber);">Merge Conflicts</div>
+      <div class="results-title">Auto-resolve or Escalate</div>
+      <div class="results-body">
+        Dev agent attempts resolution<br>
+        If failed: present conflicts to user for manual fix
+      </div>
+    </div>
+    <div class="results-card">
+      <div class="results-label" style="color: var(--orange);">Deploy Failure</div>
+      <div class="results-title">Retry / Logs / Skip</div>
+      <div class="results-body">
+        Railway preview fails health check<br>
+        Check logs, retry, or skip (not recommended)
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== TICKET ENFORCEMENT =========== -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-label">Ticket Enforcement</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 0;">
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+      <div style="font-size: 11px; color: var(--text-muted);">Branch</div>
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--text-secondary);">{ticket_id}/feature-name</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+      <div style="font-size: 11px; color: var(--text-muted);">Commit</div>
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--text-secondary);">feat({TICKET_ID}): description</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+      <div style="font-size: 11px; color: var(--text-muted);">PR Title</div>
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--text-secondary);">{TICKET_ID}: Feature title</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+      <div style="font-size: 11px; color: var(--text-muted);">PR Body</div>
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--text-secondary);">Closes {TICKET_ID}</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+      <div style="font-size: 11px; color: var(--text-muted);">Enforced by</div>
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--amber);">linear-workflow.sh hook</div>
+    </div>
+  </div>
+
+  <!-- =========== FOOTER =========== -->
+  <div class="footer">
+    <div class="divider">
+      <div class="divider-line"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--purple-dim); border-color: var(--purple-border);"></div>
+        <div class="legend-text">Agent (automated)</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--amber-dim); border-color: var(--amber-border);"></div>
+        <div class="legend-text">User gate (manual approval)</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--red-dim); border-color: var(--red-border);"></div>
+        <div class="legend-text">Fix loop (capped retries)</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--surface-2); border-color: var(--border);"></div>
+        <div class="legend-text">Action (no agent)</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--green-dim); border-color: var(--green-border);"></div>
+        <div class="legend-text">Worktree (isolated)</div>
+      </div>
+    </div>
+
+    <div class="guarantees">
+      <div class="guarantees-title">Loop Safety Guarantees</div>
+      <div class="guarantees-grid">
+        <div class="guarantee">
+          <div class="guarantee-label">Review fix loop</div>
+          <div class="guarantee-value">Max 3 rounds (initial + 2 follow-ups)</div>
+        </div>
+        <div class="guarantee">
+          <div class="guarantee-label">Test fix loop</div>
+          <div class="guarantee-value">Max 3 iterations with regression detection</div>
+        </div>
+        <div class="guarantee">
+          <div class="guarantee-label">CI fix</div>
+          <div class="guarantee-value">Max 2 attempts then escalate</div>
+        </div>
+        <div class="guarantee">
+          <div class="guarantee-label">No nesting</div>
+          <div class="guarantee-value">4f and 4h are independent budgets</div>
+        </div>
+        <div class="guarantee">
+          <div class="guarantee-label">Regression detection</div>
+          <div class="guarantee-value">Flags if 2 consecutive iterations don't reduce failures</div>
+        </div>
+        <div class="guarantee">
+          <div class="guarantee-label">Escalation</div>
+          <div class="guarantee-value">User always gets final say at every gate</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding-top: 20px; text-align: center; font-size: 11px; color: #3D4050;">
+      WealthLens &middot; /ship-feature pipeline &middot; 9 agents &middot; 6 stages &middot; 4 user gates
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
