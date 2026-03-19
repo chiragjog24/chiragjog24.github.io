@@ -1,0 +1,22 @@
+<footer>
+  <div class="footer-inner">
+    <div>&copy; {new Date().getFullYear()} Chirag Jog</div>
+    <div class="footer-links">
+      <a href="/rss.xml">RSS</a>
+      <a href="https://github.com/chiragjog" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/chiragjog" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--border-light); transition: border var(--ease); }
+  .footer-inner {
+    max-width: var(--wide-w); margin: 0 auto; padding: 28px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--body); font-size: 12px; color: var(--text-4); font-weight: 400;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { color: var(--text-3); text-decoration: none; transition: color var(--ease); }
+  .footer-links a:hover { color: var(--accent); }
+</style>

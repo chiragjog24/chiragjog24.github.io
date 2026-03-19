@@ -1,0 +1,43 @@
+---
+title: "Odoo as a Hospital Management System: Architecture Decisions for a Non-Trivial Extension"
+description: "Receptionist workflows, doctor availability engines, lab report trend charts — extending Odoo beyond CRM into a full HMS."
+pubDate: 2025-12-20
+category: engineering
+tags: [odoo, python, healthcare]
+---
+
+Odoo is a surprisingly capable platform — until you try to make it do something it wasn't designed for. Building a Hospital Management System on top of Odoo's CRM and project modules taught me where the framework helps, where it fights you, and how to keep your upgrade path sane while building deep custom functionality.
+
+## Why Odoo
+
+The pragmatic answer: it gives you authentication, role-based access, a UI framework, reporting, and an ORM for free. For a side project that needs to be functional quickly, starting from Odoo beats starting from scratch — even if you spend time learning its conventions.
+
+The deeper answer: Odoo's module system forces a clean separation of concerns. Each feature area — receptionist workflows, doctor schedules, lab reports — becomes its own module with declared dependencies. This is architecture-by-framework, and it's not bad.
+
+## The Receptionist Module
+
+The receptionist is the system's primary user. Their workflow: patient walks in → check if existing → create/update record → check doctor availability → book slot → print token. Every step needs to be fast and low-friction.
+
+The key design decision was building a dedicated dashboard rather than using Odoo's default list/form views. The dashboard shows today's queue, upcoming appointments, doctor availability at a glance, and quick-search for patient history. It's a single-screen workflow that minimizes clicks.
+
+## Doctor Availability Engine
+
+This was the most complex piece. Doctors have recurring schedules, one-off overrides, leave blocks, and cross-department consultations. The availability engine computes real-time slot availability by layering these on top of each other.
+
+The data model: a `schedule.template` defines recurring weekly patterns, `schedule.override` handles exceptions, and `appointment.slot` represents bookable units. A computed field on the doctor model returns available slots for any given date range.
+
+## Lab Reports + Trend Charts
+
+Lab results are where Odoo's reporting module actually shines. Each test result links to a patient and a test type. Historical results for the same test type automatically generate trend charts — useful for tracking things like blood sugar or cholesterol over time.
+
+The chart rendering uses Odoo's built-in Chart.js integration, which is limited but sufficient for line charts with date axes.
+
+## Keeping the Upgrade Path
+
+The cardinal rule of Odoo customization: never modify core modules. Every customization goes in a custom module that inherits and extends. This means using `_inherit` on models, `xpath` on views, and careful use of `ir.config_parameter` for settings.
+
+It's more verbose than patching core, but when Odoo 18 drops and you need to upgrade, you'll be grateful.
+
+---
+
+*This is an ongoing project. Next up: integrating lab equipment APIs for direct result import, and a patient-facing portal for appointment booking.*

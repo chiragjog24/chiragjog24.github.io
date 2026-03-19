@@ -1,0 +1,50 @@
+---
+interface Props {
+  categories: string[];
+}
+const { categories } = Astro.props;
+---
+
+<div class="filter-bar">
+  <span class="filter-label">Filter</span>
+  <button class="filter-btn active" data-cat="all">All</button>
+  {categories.map((cat) => (
+    <button class="filter-btn" data-cat={cat}>{cat}</button>
+  ))}
+</div>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const posts = document.querySelectorAll<HTMLElement>('.post-item');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat!;
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      posts.forEach((p) => {
+        p.classList.toggle('hidden', cat !== 'all' && p.dataset.cat !== cat);
+      });
+    });
+  });
+</script>
+
+<style>
+  .filter-bar {
+    max-width: var(--wide-w); margin: 0 auto; padding: 0 32px 28px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-label {
+    font-family: var(--body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4); margin-right: 4px;
+  }
+  .filter-btn {
+    font-family: var(--body); font-size: 13px; font-weight: 500;
+    padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-3); cursor: pointer; transition: all var(--ease);
+    text-transform: capitalize;
+  }
+  .filter-btn:hover { border-color: var(--text-4); color: var(--text-2); }
+  .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  @media (max-width: 860px) { .filter-bar { padding-left: 20px; padding-right: 20px; } }
+</style>

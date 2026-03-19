@@ -1,0 +1,49 @@
+---
+title: "Tracking a ₹120 Cr Family Portfolio: XIRR, Distributions, and the Spreadsheet That Refused to Die"
+description: "How I built a quarterly XIRR tracking system for a multi-entity HNI portfolio spanning mutual funds, PMS, AIFs, REITs, and InvITs."
+pubDate: 2026-02-28
+category: finance
+tags: [xirr, portfolio, india]
+---
+
+Every financial product in India has a different idea of what a "statement" looks like. CAMS gives you one format, KFintech another, Zerodha a third, and your PMS provider sends a PDF that looks like it was designed in 2004. When you're consolidating across self, spouse, HUF, and parents — across mutual funds, PMS, AIFs, REITs, and InvITs — the reconciliation problem becomes non-trivial fast.
+
+This is the story of how I built a quarterly tracking system for our family portfolio, why XIRR is the only honest return metric, and the many ways financial statements try to lie to you.
+
+## Why XIRR, Not CAGR
+
+CAGR works when you have a single lump sum invested at point A and measured at point B. The moment you have SIPs, additional purchases, redemptions, dividends, or distributions — which is to say, the moment you have a real portfolio — CAGR becomes misleading.
+
+XIRR (Extended Internal Rate of Return) accounts for the timing and direction of every cash flow. It answers the question: "What annualized return would a single investment need to earn to produce the same outcome as all my actual cash flows?"
+
+> CAGR tells you how the money grew. XIRR tells you how well *you* invested.
+
+For our portfolio, the difference is material. The headline CAGR looks impressive, but the XIRR — which accounts for the fact that large deployments happened at different market levels — tells a more honest story.
+
+## The Architecture of a Family Portfolio Tracker
+
+The system has three layers:
+
+### Data Ingestion
+
+Every quarter, I pull statements from CAMS, KFintech, broker platforms, and PMS/AIF portals. Each gets parsed into a normalized schema: date, entity, platform, instrument, transaction type, amount, units, NAV.
+
+The parsing is the hardest part. CAMS PDFs have changed format three times in two years. KFintech CSVs have inconsistent column naming. PMS statements are bespoke PDFs that resist every parser I've thrown at them.
+
+### XIRR Engine
+
+The core calculation takes all cash flows (purchases as negative, redemptions and current value as positive) and solves for the rate that makes NPV = 0. I compute this at three levels: per-holding, per-entity, and portfolio-wide.
+
+The quarterly tracking locks a baseline — our current baseline is ₹120.73 Cr as of 01-Mar-2026, with a historical XIRR of 8.85% from 01-Aug-2023.
+
+### Distribution Tracking
+
+REITs and InvITs pay quarterly distributions. AIFs have irregular income events. Tracking these is critical because they affect both XIRR (they're positive cash flows) and tax planning (different income types have different tax treatments).
+
+## Lessons Learned
+
+The biggest lesson: **automate the boring parts, but verify everything manually.** Financial data has a long tail of edge cases — corporate actions, mergers, scheme changes, NAV adjustments — that no parser handles perfectly. The spreadsheet refuses to die because the last 5% of edge cases require human judgment.
+
+---
+
+*If you're building something similar for Indian HNI portfolios, I'm happy to compare notes. Reach out on LinkedIn.*

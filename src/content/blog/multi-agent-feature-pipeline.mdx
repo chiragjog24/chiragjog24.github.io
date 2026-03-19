@@ -1,0 +1,52 @@
+---
+title: "Multi-Agent Pipelines: How I Built a 9-Agent Feature Delivery System with Claude Code"
+description: "A deep dive into orchestrating PO triage, parallel dev in git worktrees, 3-tier testing with classified fix loops, and automated PR workflows."
+pubDate: 2026-02-15
+category: engineering
+tags: [claude-code, agents, devtools]
+---
+
+What if you could type a single command and have a feature go from requirement to merged PR — with triage, architecture planning, parallel development, three tiers of testing, code review, and UAT — all orchestrated by AI agents?
+
+That's what `/ship-feature` does. It's a multi-agent pipeline I built on top of Claude Code that coordinates nine specialized agents through six stages, with four user gates where I can approve, revise, or cancel at each checkpoint.
+
+## The Problem
+
+Solo development on a side project means wearing every hat: product owner, architect, developer, tester, reviewer. Each context switch costs time and mental energy. I wanted to see how far I could push AI agents to handle the *process* while I focus on the *decisions*.
+
+## The Architecture
+
+The pipeline has six stages, each with specialized agents:
+
+**Stage 0 — PO Triage.** Always runs first. The Product Owner agent assesses the input (a requirement string or Linear ticket ID), classifies it (bug/feature/refactor/chore), estimates complexity, and recommends routing: does this need a Product Manager review? UX design? Architecture planning? Or can it go straight to dev?
+
+**Stage 1 — Product Review.** Conditional. The PM agent creates a Linear epic with child tickets, each with acceptance criteria and technical hints.
+
+**Stage 2 — Design + Architecture.** Parallel and conditional. The UX agent produces wireframe descriptions and component hierarchies. The Architect breaks tickets into implementable sub-tickets labeled Frontend/Backend/Parser with size estimates.
+
+**Stage 3 — Development.** The heart of the system. A pipeline worktree isolates all work from my main directory. Dev agents work in nested worktrees — one per sub-ticket — so they can develop in parallel without merge conflicts. Meanwhile, the QE agent writes tests (but doesn't run them yet) in its own worktree.
+
+**Stage 4 — PR + Deploy + Verify.** Creates a PR, deploys to Railway preview, then runs two parallel verification tracks: the QE agent executes three tiers of tests (vitest backend, React Testing Library components, Playwright E2E), while the Code Reviewer runs a 9-point checklist. Both have independent fix loops capped at 3 iterations.
+
+**Stage 5 — UAT + Merge.** I test on the preview URL, approve, and the system squash-merges to main.
+
+## The Key Insight: Worktree Isolation
+
+The entire system depends on git worktrees. Every agent that touches code gets its own isolated worktree. This prevents the classic "agent committed to the wrong branch" problem and enables true parallel development.
+
+```bash
+# Pipeline creates its own worktree
+git worktree add ../wealthlens-WEA-75 -b WEA-75/feature-name
+
+# Dev agents get nested worktrees within that
+git worktree add ../wealthlens-WEA-75-sub1 -b WEA-75/sub1-backend-engine
+git worktree add ../wealthlens-WEA-75-sub2 -b WEA-75/sub2-frontend-page
+```
+
+## Loop Safety
+
+The fix loops are capped to prevent infinite cycles. Test fixes get max 3 iterations with regression detection — if failures don't decrease after two consecutive iterations, the system escalates to me. Review fixes get max 3 rounds (initial + 2 follow-ups). Critically, these budgets are independent: test fixes and review fixes never nest, preventing a 3×3 = 9 cycle explosion.
+
+---
+
+*I'll open-source the orchestrator prompts once the system stabilizes. Follow along on GitHub.*

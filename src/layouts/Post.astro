@@ -1,0 +1,159 @@
+---
+import Base from './Base.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  category: string;
+  tags: string[];
+  headings: { depth: number; slug: string; text: string }[];
+  readingTime: number;
+  series?: string;
+}
+
+const { title, description, pubDate, category, tags, headings, readingTime, series } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+---
+
+<Base title={`${title} — Chirag Jog`} description={description}>
+  <div class="progress-bar" id="progressBar"></div>
+  <div class="post-view">
+    <div class="post-view-layout">
+      <article class="post-content">
+        <div class="pv-cat">{category}</div>
+        <h1 class="pv-title">{title}</h1>
+        <div class="pv-dek">{description}</div>
+        <div class="pv-byline">
+          <div class="pv-avatar">CJ</div>
+          <div class="pv-byline-text">
+            <div class="pv-byline-name">Chirag Jog</div>
+            {formattedDate} &nbsp;·&nbsp; {readingTime} min read
+          </div>
+        </div>
+
+        <div class="article-body">
+          <slot />
+        </div>
+
+        {series && (
+          <div class="series-card">
+            <div class="series-icon">→</div>
+            <div class="series-text">
+              <strong>Part of the {series} series.</strong>
+            </div>
+          </div>
+        )}
+
+        <div class="pv-footer-tags">
+          {tags.map((tag) => (
+            <span class="pv-footer-tag">{tag}</span>
+          ))}
+        </div>
+
+        <div class="author-card">
+          <div class="pv-avatar">CJ</div>
+          <div class="author-card-text">
+            <strong>Chirag Jog</strong><br />
+            CTO at Velotio / R Systems. Building AI engineering practices, tracking family
+            portfolios, and brewing Gong Fu tea in Nashik.
+          </div>
+        </div>
+      </article>
+
+      <TableOfContents headings={headings} />
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const article = document.querySelector('.article-body');
+      if (!article) return;
+      const rect = article.getBoundingClientRect();
+      const total = article.scrollHeight;
+      const scrolled = Math.max(0, Math.min(1, -rect.top / (total - window.innerHeight)));
+      const bar = document.getElementById('progressBar');
+      if (bar) bar.style.width = scrolled * 100 + '%';
+    });
+  </script>
+</Base>
+
+<style>
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px; background: var(--accent);
+    z-index: 200; width: 0; transition: width 0.1s linear; border-radius: 0 2px 2px 0;
+  }
+  .post-view { max-width: var(--wide-w); margin: 0 auto; padding: 48px 32px 100px; }
+  .post-view-layout { display: grid; grid-template-columns: 1fr 200px; gap: 64px; align-items: start; }
+  .post-content { max-width: var(--max-w); }
+
+  .pv-cat {
+    font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--accent);
+    display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px;
+  }
+  .pv-cat::before { content: ''; width: 18px; height: 2px; background: var(--accent); border-radius: 99px; }
+
+  .pv-title {
+    font-family: var(--heading); font-size: 40px; font-weight: 500; letter-spacing: -0.035em;
+    line-height: 1.12; margin-bottom: 18px; max-width: 620px;
+  }
+  .pv-dek {
+    font-family: var(--body); font-size: 18px; font-weight: 300; font-style: italic;
+    color: var(--text-2); line-height: 1.6; margin-bottom: 28px; max-width: 580px;
+  }
+  .pv-byline {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+    margin-bottom: 40px;
+  }
+  .pv-avatar {
+    width: 42px; height: 42px; border-radius: 99px;
+    background: var(--bg-warm); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--hand); font-size: 18px; font-weight: 600; color: var(--accent);
+  }
+  .pv-byline-text { font-family: var(--body); font-size: 13.5px; color: var(--text-3); line-height: 1.45; font-weight: 400; }
+  .pv-byline-name { color: var(--text); font-weight: 600; font-size: 14px; }
+
+  .series-card {
+    margin: 40px 0; padding: 20px 24px; border-radius: 14px;
+    background: var(--bg-warm); border: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .series-icon { font-family: var(--hand); font-size: 28px; color: var(--accent); flex-shrink: 0; line-height: 1; margin-top: 2px; }
+  .series-text { font-family: var(--body); font-size: 14px; color: var(--text-2); line-height: 1.6; font-weight: 400; }
+  .series-text strong { color: var(--text); font-weight: 600; }
+
+  .pv-footer-tags {
+    display: flex; gap: 8px; flex-wrap: wrap; padding-top: 32px;
+    border-top: 1px solid var(--border-light); margin-top: 44px;
+  }
+  .pv-footer-tag {
+    font-family: var(--body); font-size: 12px; font-weight: 500;
+    padding: 5px 14px; border-radius: 6px; background: var(--tag-bg); color: var(--tag-text);
+    transition: all var(--ease); cursor: pointer;
+  }
+  .pv-footer-tag:hover { background: var(--accent-dim); color: var(--accent); }
+
+  .author-card {
+    display: flex; gap: 16px; align-items: center;
+    margin-top: 28px; padding: 20px 24px; border-radius: 14px;
+    background: var(--bg-warm); border: 1px solid var(--border-light);
+  }
+  .author-card .pv-avatar { width: 48px; height: 48px; font-size: 20px; }
+  .author-card-text { font-family: var(--body); font-size: 13.5px; color: var(--text-3); line-height: 1.55; font-weight: 400; }
+  .author-card-text strong { color: var(--text); font-weight: 600; font-size: 14.5px; }
+
+  @media (max-width: 860px) {
+    .post-view-layout { grid-template-columns: 1fr; }
+    .post-view { padding: 32px 20px 80px; }
+    .pv-title { font-size: 30px; }
+  }
+</style>

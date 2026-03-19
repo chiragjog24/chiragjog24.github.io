@@ -1,0 +1,55 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="About — Chirag Jog">
+  <div class="about-page">
+    <h1>About</h1>
+    <div class="about-hand">nice to meet you ~</div>
+    <p>
+      I'm <strong>Chirag Jog</strong> — CTO at Velotio (an R Systems company), where I lead AI
+      strategy across engineering for 1,000+ engineers. I spend my days building agentic AI systems,
+      productizing engineering services, and trying to make enterprise software less painful.
+    </p>
+    <p>
+      Outside work, I'm an investor tracking a family portfolio with an unhealthy obsession for XIRR
+      accuracy, a specialty coffee enthusiast building towards home roasting, a Gong Fu tea brewer,
+      and an abstract painter who occasionally sells work online.
+    </p>
+    <p>
+      This blog is where I think out loud about <strong>engineering leadership</strong>,
+      <strong>AI strategy</strong>, <strong>personal finance</strong>, and the random intersections
+      between them. Some posts are polished; some are half-formed ideas I'm still working out.
+      That's the point.
+    </p>
+    <p class="about-meta">Based in Nashik, India. Writing in Markdown, deployed on GitHub Pages with Astro.</p>
+    <div class="about-links">
+      <a href="https://github.com/chiragjog" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/chiragjog" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://x.com/chiragjog" target="_blank" rel="noopener">Twitter / X</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .about-page { max-width: var(--max-w); margin: 0 auto; padding: 56px 32px 80px; }
+  .about-page h1 {
+    font-family: var(--heading); font-size: 38px; font-weight: 500;
+    letter-spacing: -0.03em; margin-bottom: 8px;
+  }
+  .about-hand {
+    font-family: var(--hand); font-size: 20px; color: var(--accent-soft);
+    margin-bottom: 28px; transform: rotate(-0.6deg); display: inline-block;
+  }
+  .about-page p { margin-bottom: 20px; color: var(--text-2); font-size: 16px; line-height: 1.8; font-weight: 400; }
+  .about-page p strong { color: var(--text); font-weight: 600; }
+  .about-meta { color: var(--text-3) !important; font-size: 14px !important; margin-top: 32px !important; }
+  .about-links { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .about-links a {
+    font-family: var(--body); font-size: 13px; font-weight: 500;
+    padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border);
+    color: var(--text-2); text-decoration: none; transition: all var(--ease);
+  }
+  .about-links a:hover { border-color: var(--accent-border); color: var(--accent); }
+  @media (max-width: 860px) { .about-page { padding: 40px 20px 60px; } }
+</style>

@@ -1,0 +1,64 @@
+---
+import Base from '@/layouts/Base.astro';
+import PostCard from '@/components/PostCard.astro';
+import FilterBar from '@/components/FilterBar.astro';
+import { getCollection } from 'astro:content';
+import { getReadingTime } from '@/utils/reading-time';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const categories = [...new Set(posts.map((p) => p.data.category))].sort();
+---
+
+<Base title="Chirag Jog — Code & Capital">
+  <div class="hero">
+    <h1>Building at the<br />intersection of<br />code &amp; capital.</h1>
+    <p>
+      Notes on <strong>engineering leadership</strong>, <strong>AI strategy</strong>,
+      <strong>personal finance</strong>, and the craft of building products.
+    </p>
+    <div class="hero-note">~ writing from Nashik, usually with coffee</div>
+  </div>
+
+  <FilterBar categories={categories} />
+
+  <div class="post-grid">
+    <div class="post-list">
+      {posts.map((post, i) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          pubDate={post.data.pubDate}
+          category={post.data.category}
+          tags={post.data.tags}
+          slug={post.slug}
+          readingTime={post.data.readingTime || getReadingTime(post.body || '')}
+          featured={i === 0}
+        />
+      ))}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .hero { max-width: var(--wide-w); margin: 0 auto; padding: 56px 32px 36px; }
+  .hero h1 {
+    font-family: var(--heading); font-size: 42px; font-weight: 500;
+    letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 14px;
+  }
+  .hero p { font-size: 16px; color: var(--text-2); max-width: 520px; line-height: 1.7; }
+  .hero p strong { color: var(--text); font-weight: 600; }
+  .hero-note {
+    font-family: var(--hand); font-size: 18px; color: var(--accent-soft);
+    margin-top: 10px; transform: rotate(-0.8deg); display: inline-block;
+  }
+  .post-grid { max-width: var(--wide-w); margin: 0 auto; padding: 0 32px 80px; }
+  .post-list { display: flex; flex-direction: column; }
+  :global(.post-item.hidden) { display: none; }
+  @media (max-width: 860px) {
+    .hero { padding: 36px 20px 24px; }
+    .hero h1 { font-size: 32px; }
+    .post-grid { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
