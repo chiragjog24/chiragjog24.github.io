@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   // Replace with your GitHub Pages URL or custom domain
-  site: 'https://chiragjog.github.io',
+  site: 'https://chiragjog24.github.io',
   // If deploying to https://chiragjog.github.io/blog, set base: '/blog'
   // If using a custom domain or root, remove base
   // base: '/blog',
